@@ -603,7 +603,9 @@ lazy val http4s = projectMatrix
         Dependencies.Http4s.dsl.value,
         Dependencies.Http4s.client.value,
         Dependencies.Http4s.circe.value % Test,
-        Dependencies.Weaver.cats.value % Test
+        Dependencies.Weaver.cats.value % Test,
+        Dependencies.Http4s.emberClient.value % Test,
+        Dependencies.Http4s.emberServer.value % Test
       )
     },
     moduleName := {
