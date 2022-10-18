@@ -119,20 +119,22 @@ private[smithy4s] class SmithyHttp4sServerEndpointImpl[F[_], Op[_, _, _, _, _], 
       errorTransformation(other).flatMap(F.raiseError)
   }
 
-  private def extractInput(metadata: Metadata, request: Request[F]): F[I] = {
+  private val extractInput: (Metadata, Request[F]) => F[I] = {
     inputMetadataDecoder.total match {
       case Some(totalDecoder) =>
-        request.body.compile.drain *>
-          totalDecoder.decode(metadata).liftTo[F]
+        (metadata, request) =>
+          request.body.compile.drain *>
+            totalDecoder.decode(metadata).liftTo[F]
       case None =>
         // NB : only compiling the input codec if the data cannot be
         // totally extracted from the metadata.
-        implicit val inputCodec =
-          codecs.compilePartialEntityDecoder(inputSchema)
-        for {
-          metadataPartial <- inputMetadataDecoder.decode(metadata).liftTo[F]
-          bodyPartial <- request.as[BodyPartial[I]]
-        } yield metadataPartial.combine(bodyPartial)
+        (metadata, request) =>
+          implicit val inputCodec =
+            codecs.compilePartialEntityDecoder(inputSchema)
+          for {
+            metadataPartial <- inputMetadataDecoder.decode(metadata).liftTo[F]
+            bodyPartial <- request.as[BodyPartial[I]]
+          } yield metadataPartial.combine(bodyPartial)
     }
   }
 
