@@ -28,8 +28,8 @@ object Smithy4sPlugin extends AutoPlugin {
   val CatsEffect3Axis = CatsEffectAxis("_CE3", "ce3")
   val CatsEffect2Axis = CatsEffectAxis("_CE2", "ce2")
 
-  val Scala212 = "2.12.16"
-  val Scala213 = "2.13.8"
+  val Scala212 = "2.12.17"
+  val Scala213 = "2.13.10"
   val Scala3 = "3.2.0"
 
   implicit class ProjectMatrixOps(val pm: ProjectMatrix) extends AnyVal {
@@ -170,7 +170,7 @@ object Smithy4sPlugin extends AutoPlugin {
 
   def targetScalacOptions(scalaVersion: String) =
     if (scalaVersion.startsWith("2.12")) Seq("-target:jvm-1.8", "-release", "8")
-    else if (scalaVersion.startsWith("2.13")) Seq("-target:8", "-release", "8")
+    else if (scalaVersion.startsWith("2.13")) Seq("-release", "8")
     else if (scalaVersion.startsWith("3.")) Seq("-release", "8")
     else Seq.empty // when we get Scala 4...
 
@@ -253,19 +253,19 @@ object Smithy4sPlugin extends AutoPlugin {
     headerLicense := Some(
       HeaderLicense.Custom(
         """| Copyright 2021-2022 Disney Streaming
-     |
-     | Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
-     | you may not use this file except in compliance with the License.
-     | You may obtain a copy of the License at
-     |
-     |    https://disneystreaming.github.io/TOST-1.0.txt
-     |
-     | Unless required by applicable law or agreed to in writing, software
-     | distributed under the License is distributed on an "AS IS" BASIS,
-     | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-     | See the License for the specific language governing permissions and
-     | limitations under the License.
-     |""".stripMargin
+           |
+           | Licensed under the Tomorrow Open Source Technology License, Version 1.0 (the "License");
+           | you may not use this file except in compliance with the License.
+           | You may obtain a copy of the License at
+           |
+           |    https://disneystreaming.github.io/TOST-1.0.txt
+           |
+           | Unless required by applicable law or agreed to in writing, software
+           | distributed under the License is distributed on an "AS IS" BASIS,
+           | WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+           | See the License for the specific language governing permissions and
+           | limitations under the License.
+           |""".stripMargin
       )
     )
   )

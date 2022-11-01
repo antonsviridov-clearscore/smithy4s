@@ -1,3 +1,4 @@
+import sbt.internal.IvyConsole
 import org.scalajs.jsenv.nodejs.NodeJSEnv
 
 import java.io.File
@@ -67,6 +68,7 @@ lazy val allModules = Seq(
   `codegen-cli`,
   dynamic,
   testUtils,
+  guides,
   complianceTests
 ).flatMap(_.projectRefs)
 
@@ -86,13 +88,19 @@ lazy val docs =
     .settings(
       mdocIn := (ThisBuild / baseDirectory).value / "modules" / "docs" / "src",
       mdocVariables := Map(
-        "VERSION" -> (if (isSnapshot.value)
-                        previousStableVersion.value.getOrElse(
-                          throw new Exception(
-                            "No previous version found from dynver"
-                          )
-                        )
-                      else version.value),
+        "VERSION" -> {
+          sys.env
+            .get("SMITHY4S_VERSION")
+            .getOrElse {
+              if (isSnapshot.value)
+                previousStableVersion.value.getOrElse(
+                  throw new Exception(
+                    "No previous version found from dynver"
+                  )
+                )
+              else version.value
+            }
+        },
         "SCALA_VERSION" -> scalaVersion.value,
         "HTTP4S_VERSION" -> Dependencies.Http4s.http4sVersion.value
       ),
@@ -688,7 +696,7 @@ lazy val tests = projectMatrix
 
 lazy val complianceTests = projectMatrix
   .in(file("modules/compliance-tests"))
-  .dependsOn(core, http4s % "test->compile", testUtils)
+  .dependsOn(core, http4s % "compile->compile; test->compile", testUtils)
   .settings(
     name := "compliance-tests",
     Compile / allowedNamespaces := Seq("smithy.test", "smithy4s.example"),
@@ -763,6 +771,24 @@ lazy val example = projectMatrix
   .jvmPlatform(List(Scala213), jvmDimSettings)
   .settings(Smithy4sPlugin.doNotPublishArtifact)
 
+lazy val guides = projectMatrix
+  .in(file("modules/guides"))
+  .dependsOn(http4s)
+  .settings(
+    Compile / allowedNamespaces := Seq("smithy4s.guides.hello"),
+    smithySpecs := Seq(
+      (ThisBuild / baseDirectory).value / "modules" / "guides" / "smithy" / "hello.smithy"
+    ),
+    (Compile / sourceGenerators) := Seq(genSmithyScala(Compile).taskValue),
+    isCE3 := true,
+    libraryDependencies ++= Seq(
+      Dependencies.Http4s.emberServer.value,
+      Dependencies.Weaver.cats.value % Test
+    )
+  )
+  .jvmPlatform(Seq(Scala3), jvmDimSettings)
+  .settings(Smithy4sPlugin.doNotPublishArtifact)
+
 /**
  * Pretty primitive benchmarks to test that we're not doing anything drastically
  * slow.
@@ -797,11 +823,11 @@ lazy val Dependencies = new {
 
   val Jsoniter =
     Def.setting(
-      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core" % "2.17.5"
+      "com.github.plokhotnyuk.jsoniter-scala" %%% "jsoniter-scala-core" % "2.17.6"
     )
 
   val Smithy = new {
-    val smithyVersion = "1.25.1"
+    val smithyVersion = "1.25.2"
     val model = "software.amazon.smithy" % "smithy-model" % smithyVersion
     val testTraits =
       "software.amazon.smithy" % "smithy-protocol-test-traits" % smithyVersion
@@ -901,7 +927,7 @@ lazy val Dependencies = new {
   }
 
   object Webjars {
-    val swaggerUi: ModuleID = "org.webjars.npm" % "swagger-ui-dist" % "4.14.0"
+    val swaggerUi: ModuleID = "org.webjars.npm" % "swagger-ui-dist" % "4.15.0"
 
     val webjarsLocator: ModuleID = "org.webjars" % "webjars-locator" % "0.42"
   }
